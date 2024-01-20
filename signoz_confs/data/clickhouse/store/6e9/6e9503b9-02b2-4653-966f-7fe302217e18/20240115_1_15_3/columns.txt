@@ -1,0 +1,11 @@
+columns format version: 1
+9 columns:
+`metric_name` LowCardinality(String)
+`fingerprint` UInt64
+`timestamp_ms` Int64
+`labels` String
+`temporality` LowCardinality(String)
+`description` LowCardinality(String)
+`unit` LowCardinality(String)
+`type` LowCardinality(String)
+`is_monotonic` Bool
