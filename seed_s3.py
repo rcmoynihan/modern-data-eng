@@ -45,9 +45,13 @@ def generate_pageview_data(num_records: int) -> List[Dict]:
         pageview = {
             "id": fake.uuid4(),
             "user_id": fake.uuid4(),
-            "product_name": random.choices(population=list(absurd_product_names.keys()), weights=list(absurd_product_names.values()))[0],
+            "product_name": random.choices(
+                population=list(absurd_product_names.keys()),
+                weights=list(absurd_product_names.values())
+            )[0],
             "timestamp": fake.iso8601(),
             "session_length_ms": fake.random_int(min=1000, max=100000),
+            "was_purchased": fake.boolean(chance_of_getting_true=20),
             "referrer": fake.url(),
             "ip_address": fake.ipv4(),
             "user_agent": fake.user_agent()

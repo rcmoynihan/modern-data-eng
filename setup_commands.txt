@@ -1,10 +1,24 @@
+# start docker compose stack
+
+docker-compose -f .\docker-compose.yaml up --build --remove-orphans
+
 # create stack
 
 awslocal cloudformation create-stack --stack-name modern-data-eng-stack --template-body file://infra.yaml
+poetry run python seed_s3.py
 
 # create lambda
 
-Compress-Archive -LiteralPath .\batch_transform.py -DestinationPath transform.zip -Force  # windows
+Compress-Archive -LiteralPath .\batch_transform.py -DestinationPath batch_transform.zip -Force  # windows
+zip batch_transform.py batch_transform.zip  # unix
 awslocal lambda create-function --function-name BatchTransform --zip-file fileb://batch_transform.zip --handler batch_transform.lambda_handler --runtime python3.10 --role arn:aws:iam::123456789012:role/lambda-role
 
 # invoke lambda (debug)
+nvm
+
+# Airflow
+username airflow
+password airflow
+
+connections -> "+" -> AWS / localhost / 4566
+

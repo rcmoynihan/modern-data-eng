@@ -1,4 +1,27 @@
-version: "3.8"
+version: "3.10"
+x-airflow-common:
+  &airflow-common
+  build:
+    context: .
+    dockerfile: Dockerfile.airflow
+  environment:
+    - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:postgres@postgres:5432/airflow
+    - AIRFLOW__CORE__FERNET_KEY=FB0o_zt4e3Ziq3LdUUO7F2Z95cvFFx16hU8jTeR1ASM=
+    - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    - AIRFLOW__CORE__LOGGING_LEVEL=INFO
+    - AIRFLOW__SMTP__SMTP_HOST=maildev  # Name of your Maildev service in Docker Compose
+    - AIRFLOW__SMTP__SMTP_PORT=25  # Default Maildev port
+    - AIRFLOW__SMTP__SMTP_MAIL_FROM=airflow_notification@rainforest.com
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./airflow-data/logs:/opt/airflow/logs
+    - ./airflow-data/plugins:/opt/airflow/plugins
+    - ./airflow-data/airflow.cfg:/opt/airlfow/airflow.cfg
+  depends_on:
+    - postgres
+  networks:
+    - data-eng-net
 
 services:
   localstack:
@@ -16,3 +39,64 @@ services:
     volumes:
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - data-eng-net
+  
+  postgres:
+    image: postgres:12
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=airflow
+      - POSTGRES_PORT=5432
+    ports:
+      - "5432:5432"
+    networks:
+      - data-eng-net
+
+  airflow-init:
+    << : *airflow-common
+    container_name: airflow_init
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - >
+        airflow db upgrade &&
+        airflow variables set latest_partition_key "year=1970/month=01/day=01" &&
+        airflow users list || ( 
+          airflow db init &&
+          airflow users create
+            --role Admin
+            --username airflow
+            --password airflow
+            --email airflow@airflow.com
+            --firstname airflow
+            --lastname airflow 
+        )
+    restart: on-failure
+
+  airflow-webserver:
+    << : *airflow-common
+    command: airflow webserver
+    ports:
+      - 8080:8080
+    container_name: airflow_webserver
+    restart: always
+
+  airflow-scheduler:
+    << : *airflow-common
+    command: airflow scheduler
+    container_name: airflow_scheduler
+    restart: always
+  
+  maildev:
+    image: djfarrelly/maildev
+    ports:
+      - "1080:80"  # Web interface
+      - "1025:25"  # SMTP server
+    networks:
+      - data-eng-net
+
+networks:
+  data-eng-net:
+    driver: bridge

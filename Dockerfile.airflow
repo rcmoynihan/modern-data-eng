@@ -1,0 +1,2 @@
+FROM apache/airflow:2.8.1-python3.10
+RUN pip install --no-cache-dir "apache-airflow[amazon]==${AIRFLOW_VERSION}" apache-airflow-providers-amazon>=8.16.0 boto3

@@ -1,3 +1,8 @@
+# Custom
+airflow-data/
+localstack/
+volume/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
