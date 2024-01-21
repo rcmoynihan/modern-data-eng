@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to create S3 buckets with a consolidated policy
+
+Resources:
+  RawBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: raw
+
+  StagingBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: staging
+
+  ClickhouseBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: clickhouse
+
+  AllBucketsPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref RawBucket
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 's3:GetObject'
+              - 's3:PutObject'
+              - 's3:DeleteObject'
+            Effect: Allow
+            Resource:
+              - !Sub 'arn:aws:s3:::${RawBucket}/*'
+              - !Sub 'arn:aws:s3:::${StagingBucket}/*'
+              - !Sub 'arn:aws:s3:::${ClickhouseBucket}/*'
+            Principal: '*'

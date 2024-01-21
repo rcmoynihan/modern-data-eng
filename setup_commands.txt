@@ -1,0 +1,10 @@
+# create stack
+
+awslocal cloudformation create-stack --stack-name modern-data-eng-stack --template-body file://infra.yaml
+
+# create lambda
+
+Compress-Archive -LiteralPath .\batch_transform.py -DestinationPath transform.zip -Force  # windows
+awslocal lambda create-function --function-name BatchTransform --zip-file fileb://batch_transform.zip --handler batch_transform.lambda_handler --runtime python3.10 --role arn:aws:iam::123456789012:role/lambda-role
+
+# invoke lambda (debug)
