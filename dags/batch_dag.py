@@ -47,8 +47,8 @@ partition = Variable.get("latest_partition_key")
 date_fmt = datetime.strptime(partition, "year=%Y/month=%m/day=%d").strftime("%Y-%m-%d")
 
 # Define keys for aggregated and validated data.
-aggregated_key = f"aggregated/{date_fmt}.json"
-validated_key = f"validated/{date_fmt}.json"
+aggregated_key = f"aggregated/{date_fmt}.csv"
+validated_key = f"validated/{date_fmt}.csv"
 
 # An operator to signify the end of the DAG run.
 notify_end_run_no_data = EmailOperator(

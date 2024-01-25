@@ -1,4 +1,6 @@
 import asyncio
+import csv
+from io import StringIO
 import json
 import logging
 import boto3
@@ -99,23 +101,34 @@ async def process_partition(bucket_name: str, partition_path: str) -> Dict:
     return aggregated_data
 
 
-def write_to_s3(data: Dict, aggregated_key: str):
+def write_to_s3(data: Dict[str, Any], aggregated_key: str):
     """
-    Write the aggregated data to the staging S3 bucket.
+    Write the aggregated data to the staging S3 bucket in CSV format.
 
     :param data: The aggregated data dict.
-    :param original_key: The original S3 key of the input file.
+    :param aggregated_key: The S3 key for the output file.
     """
     try:
         staging_bucket = "staging"
 
-        # Convert data to JSON
-        json_data = json.dumps(data)
+        # Flatten data for CSV
+        csv_rows = []
+        for product, metrics in data.items():
+            row = [product] + list(metrics.values())
+            csv_rows.append(row)
+
+        # Convert data to CSV
+        csv_file = StringIO()
+        csv_writer = csv.writer(csv_file)
+        csv_writer.writerow(["Product", "Total Session View Time (ms)", "Total Sessions", "Total Purchases"])  # Header
+        csv_writer.writerows(csv_rows)
+        csv_data = csv_file.getvalue()
+        csv_file.close()
 
         # Write to S3
         with closing(boto3.client("s3", **AWS_CREDENTIALS)) as s3_client:
             s3_client.put_object(
-                Bucket=staging_bucket, Key=aggregated_key, Body=json_data
+                Bucket=staging_bucket, Key=aggregated_key, Body=csv_data, ContentType='text/csv'
             )
             logger.info(
                 f"Successfully wrote aggregated data to {staging_bucket}/{aggregated_key}"
