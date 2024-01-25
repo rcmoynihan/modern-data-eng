@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import json
 from airflow import DAG
 from airflow.providers.amazon.aws.operators.lambda_function import (
     LambdaInvokeFunctionOperator,
@@ -62,7 +63,7 @@ notify_end_run_no_data = EmailOperator(
 aggregate_data = LambdaInvokeFunctionOperator(
     task_id="aggregate_data",
     function_name="BatchTransform",
-    payload={"latest_partition_key": partition, "aggregated_key": aggregated_key},
+    payload=json.dumps({"latest_partition_key": partition, "aggregated_key": aggregated_key}),
     aws_conn_id="aws_localstack",
     dag=dag,
 )
@@ -71,7 +72,7 @@ aggregate_data = LambdaInvokeFunctionOperator(
 validate_data = LambdaInvokeFunctionOperator(
     task_id="validate_data",
     function_name="Validate",
-    payload={"aggregated_key": aggregated_key},
+    payload=json.dumps({"aggregated_key": aggregated_key}).encode("utf-8"),
     aws_conn_id="aws_localstack",
     dag=dag,
 )

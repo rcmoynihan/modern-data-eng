@@ -9,8 +9,8 @@ poetry run python seed_s3.py
 
 # create lambda
 
-Compress-Archive -LiteralPath .\batch_transform.py -DestinationPath batch_transform.zip -Force  # windows
-zip batch_transform.py batch_transform.zip  # unix
+Compress-Archive -LiteralPath .\batch_transform\lambda_function.py -DestinationPath .\batch_transform\batch_transform.zip -Force  # windows
+zip batch_transform/batch_transform.py batch_transform/batch_transform.zip  # unix
 awslocal lambda create-function --function-name BatchTransform --zip-file fileb://batch_transform.zip --handler batch_transform.lambda_handler --runtime python3.10 --role arn:aws:iam::123456789012:role/lambda-role
 
 # invoke lambda (debug)
