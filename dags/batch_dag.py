@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import json
+import great_expectations as gx
 from airflow import DAG
 from airflow.providers.amazon.aws.operators.lambda_function import (
     LambdaInvokeFunctionOperator,
@@ -11,6 +12,7 @@ from airflow.models import Variable
 
 from util.s3 import find_latest_partition
 from util.notify import generate_failure_email_operator
+from util.validate import gx_validate
 
 
 default_args = {
@@ -63,17 +65,29 @@ notify_end_run_no_data = EmailOperator(
 aggregate_data = LambdaInvokeFunctionOperator(
     task_id="aggregate_data",
     function_name="BatchTransform",
-    payload=json.dumps({"latest_partition_key": partition, "aggregated_key": aggregated_key}),
+    payload=json.dumps(
+        {"latest_partition_key": partition, "aggregated_key": aggregated_key}
+    ),
     aws_conn_id="aws_localstack",
     dag=dag,
 )
 
-# LambdaInvokeFunctionOperator to call a Lambda function for validating data.
-validate_data = LambdaInvokeFunctionOperator(
+validate_data = BranchPythonOperator(
     task_id="validate_data",
-    function_name="Validate",
-    payload=json.dumps({"aggregated_key": aggregated_key}).encode("utf-8"),
-    aws_conn_id="aws_localstack",
+    python_callable=gx_validate,
+    op_kwargs={
+        "data_context": gx.get_context(context_root_dir="dags/include/gx/"),
+        "checkpoint_name": "aggregate_data_checkpoint",
+        "s3_key": aggregated_key,
+    },
+    dag=dag,
+)
+
+notify_validation_did_not_pass = EmailOperator(
+    task_id="notify_validation_did_not_pass",
+    to="data_eng_team@rainforest.com",
+    subject=f"Airflow alert: Validation suite FAILED for {date_fmt}",
+    html_content=f"<h3>Validation suite FAILED for {date_fmt}</h3>",
     dag=dag,
 )
 
@@ -95,6 +109,7 @@ load_clickhouse_failure_email = generate_failure_email_operator("load_clickhouse
 
 # Define the workflow sequence: Get partition, then aggregate data, validate, and load to ClickHouse.
 get_partition >> [aggregate_data, notify_end_run_no_data]
+validate_data >> [load_clickhouse, notify_validation_did_not_pass]
 aggregate_data >> validate_data >> load_clickhouse
 
 # Set dependencies for email alerts on failure

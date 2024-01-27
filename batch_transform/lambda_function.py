@@ -120,7 +120,14 @@ def write_to_s3(data: Dict[str, Any], aggregated_key: str):
         # Convert data to CSV
         csv_file = StringIO()
         csv_writer = csv.writer(csv_file)
-        csv_writer.writerow(["Product", "Total Session View Time (ms)", "Total Sessions", "Total Purchases"])  # Header
+        csv_writer.writerow(
+            [
+                "product",
+                "total_session_view_time_ms",
+                "total_sessions",
+                "total_purchases",
+            ]
+        )  # Header
         csv_writer.writerows(csv_rows)
         csv_data = csv_file.getvalue()
         csv_file.close()
@@ -128,7 +135,10 @@ def write_to_s3(data: Dict[str, Any], aggregated_key: str):
         # Write to S3
         with closing(boto3.client("s3", **AWS_CREDENTIALS)) as s3_client:
             s3_client.put_object(
-                Bucket=staging_bucket, Key=aggregated_key, Body=csv_data, ContentType='text/csv'
+                Bucket=staging_bucket,
+                Key=aggregated_key,
+                Body=csv_data,
+                ContentType="text/csv",
             )
             logger.info(
                 f"Successfully wrote aggregated data to {staging_bucket}/{aggregated_key}"
