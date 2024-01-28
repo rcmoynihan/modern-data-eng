@@ -87,7 +87,7 @@ This section outlines the steps required to set up your environment before atten
   ```
   This may take a while (5-10 minutes depending on internet speed) on the first run as Docker needs to download all specified containers. Subsequent runs will be faster.
 
-- Use `Crtl + C` to bring the stack down.
+- Use `Crtl + C` to bring the stack down once everything is initialized (there won't be an explicit "Done" message, things will just stop running like crazy).
 
 ## Verify Setup
 
