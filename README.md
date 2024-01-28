@@ -46,6 +46,7 @@ This section outlines the steps required to set up your environment before atten
   - Open DBeaver.
   - Navigate to Database > Driver Manager.
   - Find and install the ClickHouse driver.
+- _Alternatively_, any DB client that supports ClickHouse is fine (e.g. DataGrip, Looker). You can also just use the [ClickHouse CLI](https://clickhouse.com/docs/en/interfaces/cli) if you prefer a command line interface.
 
 ## Configuration
 
