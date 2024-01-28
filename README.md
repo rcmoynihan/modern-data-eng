@@ -155,6 +155,8 @@ Installed via docker-compose:
 - **MailDev:** An easy-to-use SMTP server for development purposes. It's used here to test email notifications from Airflow.
 - **ZooKeeper:** A centralized service for maintaining configuration information, naming, providing distributed synchronization, and providing group services.
 - **Redis:** An open-source, in-memory data structure store, used as a database, cache, and message broker.
+- **Kinesis:** An AWS service designed to process large-scale data streams from a multitude of services in real-time. It can be considered, like Apache Kafka, as a kind of message broker. This means that it operates as a middleman between various data generating sources, to allow other applications or services to work with the source data.
+- **SQS:** An AWS provided messaging queue. A messaging queue is a form of asynchronous service-to-service communication used in serverless and microservices architectures. Messages are stored on the queue until they are processed and deleted. Each message is processed only once, by a single consumer.
 
 
 # In-Lecture Reference
