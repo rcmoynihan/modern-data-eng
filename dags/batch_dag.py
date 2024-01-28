@@ -74,7 +74,7 @@ aggregate_data = LambdaInvokeFunctionOperator(
     dag=dag,
 )
 
-validate_data = BranchPythonOperator(
+validate_data = BranchPythonOperator(  # TODO: make this an excersie for the students to implement (leave actual code in util/validate.py, but remove depedencies below). can use separate branch.
     task_id="validate_data",
     python_callable=gx_validate,
     op_kwargs={
@@ -85,12 +85,14 @@ validate_data = BranchPythonOperator(
     dag=dag,
 )
 
-notify_validation_did_not_pass = EmailOperator(
-    task_id="notify_validation_did_not_pass",
-    to="data_eng_team@rainforest.com",
-    subject=f"Airflow alert: Validation suite FAILED for {date_fmt}",
-    html_content=f"<h3>Validation suite FAILED for {date_fmt}</h3>",
-    dag=dag,
+notify_validation_did_not_pass = (
+    EmailOperator(  # TODO: also remove this and make it an exercise for the students
+        task_id="notify_validation_did_not_pass",
+        to="data_eng_team@rainforest.com",
+        subject=f"Airflow alert: Validation suite FAILED for {date_fmt}",
+        html_content=f"<h3>Validation suite FAILED for {date_fmt}</h3>",
+        dag=dag,
+    )
 )
 
 # Operator to copy data from one S3 bucket to another after validation, preparing it for ClickHouse.
@@ -119,7 +121,9 @@ load_clickhouse = ClickHouseOperator(
 # Set up email operators for task failures
 aggregate_data_failure_email = generate_failure_email_operator("aggregate_data", dag)
 validate_data_failure_email = generate_failure_email_operator("validate_data", dag)
-copy_to_clickhouse_s3_failure_email = generate_failure_email_operator("copy_to_clickhouse_s3", dag)
+copy_to_clickhouse_s3_failure_email = generate_failure_email_operator(
+    "copy_to_clickhouse_s3", dag
+)
 load_clickhouse_failure_email = generate_failure_email_operator("load_clickhouse", dag)
 
 
