@@ -15,7 +15,7 @@ This section outlines the steps required to set up your environment before atten
 ## Installations
 
 ### 1. Git
-- **Mac:** Use Homebrew to install Git. Open a terminal and run:
+- **Mac:** Use [Homebrew](https://brew.sh/) to install Git. Open a terminal and run:
   ```
   brew install git
   ```
