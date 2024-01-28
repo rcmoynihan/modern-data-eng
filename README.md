@@ -5,11 +5,12 @@ Accompaniment repository for The Modern Data Engineering Stack presentation.
 - [Pre-Lecture Setup](#pre-lecture-setup)
 - [In-Lecture Reference](#in-lecture-reference)
 
-**_Please remember to bring your name plates!_**
 
 # Pre-Lecture Setup
 
 This section outlines the steps required to set up your environment before attending the lecture. It includes instructions for installations, configurations, and verifications of various tools and technologies. The commands are split for Mac and Windows users where necessary.
+
+**_Please remember to bring your name plates!_**
 
 ## Installations
 
