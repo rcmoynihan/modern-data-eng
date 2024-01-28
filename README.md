@@ -10,7 +10,7 @@ Accompaniment repository for The Modern Data Engineering Stack presentation.
 
 This section outlines the steps required to set up your environment before attending the lecture. It includes instructions for installations, configurations, and verifications of various tools and technologies. The commands are split for Mac and Windows users where necessary.
 
-**_Please remember to bring your name plates!_**
+**_Please remember to bring your name plates!_** If I start cold calling I have a habit of choosing those _without_ them first, you've been warned.
 
 ## Installations
 
