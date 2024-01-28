@@ -131,7 +131,7 @@ Resources:
   S3EventSourceMapping:
     Type: 'AWS::Lambda::EventSourceMapping'
     Properties:
-      BatchSize: 16
+      BatchSize: 1
       EventSourceArn: !GetAtt UploadQueue.Arn
       FunctionName: !GetAtt S3EventProcessor.Arn
       Enabled: true
