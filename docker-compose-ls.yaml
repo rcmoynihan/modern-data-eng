@@ -6,13 +6,17 @@ x-airflow-common:
     dockerfile: Dockerfile.airflow
   environment:
     - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-    - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:postgres@postgres:5432/airflow
+    - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
     - AIRFLOW__CORE__FERNET_KEY=FB0o_zt4e3Ziq3LdUUO7F2Z95cvFFx16hU8jTeR1ASM=
     - AIRFLOW__CORE__LOAD_EXAMPLES=False
     - AIRFLOW__CORE__LOGGING_LEVEL=INFO
     - AIRFLOW__SMTP__SMTP_HOST=maildev  # Name of your Maildev service in Docker Compose
     - AIRFLOW__SMTP__SMTP_PORT=25  # Default Maildev port
     - AIRFLOW__SMTP__SMTP_MAIL_FROM=airflow_notification@rainforest.com
+    - _AIRFLOW_DB_MIGRATE=True
+    - _AIRFLOW_WWW_USER_CREATE=True
+    - _AIRFLOW_WWW_USER_USERNAME=${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+    - _AIRFLOW_WWW_USER_PASSWORD=${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./airflow-data/logs:/opt/airflow/logs
@@ -22,6 +26,32 @@ x-airflow-common:
     - postgres
   networks:
     - data-eng-net
+
+x-clickhouse-defaults: &clickhouse-defaults
+  restart: on-failure
+  image: clickhouse/clickhouse-server:23.11.1-alpine
+  tty: true
+  depends_on:
+    - zookeeper-1
+  logging:
+    options:
+      max-size: 50m
+      max-file: "3"
+  healthcheck:
+    test: ["CMD", "wget", "--spider", "-q", "localhost:8123/ping"]
+    interval: 30s
+    timeout: 5s
+    retries: 3
+  ulimits:
+    nproc: 65535
+    nofile:
+      soft: 262144
+      hard: 262144
+
+x-db-depend: &db-depend
+  depends_on:
+    clickhouse:
+      condition: service_healthy
 
 services:
   localstack:
@@ -43,16 +73,21 @@ services:
       - data-eng-net
   
   postgres:
-    image: postgres:12
+    image: postgres:13
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=airflow
-      - POSTGRES_PORT=5432
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
     networks:
       - data-eng-net
+    restart: always
 
   airflow-init:
     << : *airflow-common
@@ -61,19 +96,29 @@ services:
     command:
       - -c
       - >
-        airflow db upgrade &&
+        airflow db migrate &&
         airflow variables set latest_partition_key "year=1970/month=01/day=01" &&
-        airflow users list || ( 
-          airflow db init &&
+        airflow users list || (
           airflow users create
             --role Admin
-            --username airflow
-            --password airflow
+            --username admin 
+            --password admin
             --email airflow@airflow.com
             --firstname airflow
             --lastname airflow 
-        )
+        ) &&
+        airflow connections add aws_local \
+            --conn-type 'aws' \
+            --conn-login 'test' \
+            --conn-password 'test' \
+            --conn-extra '{"region_name": "us-east-1", "endpoint_url": "http://localstack:4566"}' &&
+        airflow connections add clickhouse_local \
+            --conn-type 'sqlite' \
+            --conn-host 'clickhouse' \
+            --conn-login 'default' \
+            --conn-port 8123
     restart: on-failure
+
 
   airflow-webserver:
     << : *airflow-common
@@ -97,6 +142,45 @@ services:
     networks:
       - data-eng-net
 
+  zookeeper-1:
+    image: bitnami/zookeeper:3.7.1
+    container_name: signoz-zookeeper-1
+    hostname: zookeeper-1
+    user: root
+    ports:
+      - "2181:2181"
+      - "2888:2888"
+      - "3888:3888"
+    volumes:
+      - zookeeper_data_1:/bitnami/zookeeper
+    environment:
+      - ZOO_SERVER_ID=1
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_AUTOPURGE_INTERVAL=1
+    networks:
+      - data-eng-net
+
+  clickhouse:
+    <<: *clickhouse-defaults
+    container_name: signoz-clickhouse
+    hostname: clickhouse
+    ports:
+      - "9000:9000"
+      - "8123:8123"
+      - "9181:9181"
+    volumes:
+      - ./clickhouse_confs/clickhouse-config.xml:/etc/clickhouse-server/config.xml
+      - ./clickhouse_confs/clickhouse-users.xml:/etc/clickhouse-server/users.xml
+      - ./clickhouse_confs/clickhouse-cluster.xml:/etc/clickhouse-server/config.d/cluster.xml
+      - clickhouse_data:/var/lib/clickhouse/
+    networks:
+      - data-eng-net
+
 networks:
   data-eng-net:
     driver: bridge
+
+volumes:
+  postgres-db-volume:
+  zookeeper_data_1:
+  clickhouse_data:

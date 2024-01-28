@@ -51,6 +51,7 @@ def generate_pageview_data(num_records: int) -> List[Dict]:
             )[0],
             "timestamp": fake.iso8601(),
             "session_length_ms": fake.random_int(min=1000, max=100000),
+            # "session_length_ms": fake.random_int(max=0, min=-10000),  # Uncomment to generate invalid data
             "was_purchased": fake.boolean(chance_of_getting_true=20),
             "referrer": fake.url(),
             "ip_address": fake.ipv4(),

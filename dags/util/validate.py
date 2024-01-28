@@ -39,7 +39,7 @@ def gx_validate(data_context: DataContext, checkpoint_name: str, s3_key: str) ->
         result = data_context.run_checkpoint(checkpoint_name, batch_request=batch_request)
 
     if result["success"]:
-        return "load_clickhouse"
+        return "copy_to_clickhouse_s3"
     else:
         return "notify_validation_did_not_pass"
 
