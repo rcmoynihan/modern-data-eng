@@ -151,7 +151,7 @@ Installed via docker-compose:
 - **Great Expectations (GX):** Data quality validation tool.
 - **MailDev:** An easy-to-use SMTP server for development purposes. It's used here to test email notifications from Airflow.
 - **ZooKeeper:** A centralized service for maintaining configuration information, naming, providing distributed synchronization, and providing group services.
-- **Redis:** An open-source, in-memory data structure store, used as a database, cache, and message broker. Here, it's configured for use with environment-specific variables.
+- **Redis:** An open-source, in-memory data structure store, used as a database, cache, and message broker.
 
 
 # In-Lecture Reference
