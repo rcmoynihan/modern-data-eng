@@ -1,0 +1,147 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to create S3 buckets, an SQS queue, and a Lambda function with event notifications
+
+Resources:
+  UploadQueue:
+    Type: 'AWS::SQS::Queue'
+    Properties:
+      QueueName: s3-upload-queue
+  
+  PricingModelStream:
+    Type: 'AWS::Kinesis::Stream'
+    Properties:
+      Name: pricing_model_stream
+      ShardCount: 1
+
+  RawBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: raw
+      NotificationConfiguration:
+        QueueConfigurations:
+          - Event: 's3:ObjectCreated:*'
+            Queue: !GetAtt UploadQueue.Arn
+
+  StagingBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: staging
+
+  ClickhouseBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: clickhouse
+
+  PriceChangeBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: price-change
+
+  AllBucketsPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref RawBucket
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 's3:GetObject'
+              - 's3:PutObject'
+              - 's3:DeleteObject'
+            Effect: Allow
+            Resource:
+              - !Sub 'arn:aws:s3:::${RawBucket}/*'
+              - !Sub 'arn:aws:s3:::${StagingBucket}/*'
+              - !Sub 'arn:aws:s3:::${ClickhouseBucket}/*'
+              - !Sub 'arn:aws:s3:::${PriceChangeBucket}/*'
+            Principal: '*'
+
+  LambdaExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: LambdaSQSPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:ReceiveMessage'
+                  - 'sqs:DeleteMessage'
+                  - 'sqs:GetQueueAttributes'
+                Resource: !GetAtt UploadQueue.Arn
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                Resource: !Sub 'arn:aws:s3:::${RawBucket}/*'
+        - PolicyName: LambdaKinesisPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'kinesis:Get*'
+                  - 'kinesis:Put*'
+                Resource: !Sub 'arn:aws:kinesis:${AWS::Region}:${AWS::AccountId}:stream/PricingModelStream'
+
+  
+  BatchTransform:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Handler: 'lambda_function.lambda_handler'
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.10
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return None
+  
+  S3EventProcessor:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Handler: 'lambda_function.lambda_handler'
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.10
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return None
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref UploadQueue
+  
+  PriceAdjuster:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Handler: 'lambda_function.lambda_handler'
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.10
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return None
+
+  S3EventSourceMapping:
+    Type: 'AWS::Lambda::EventSourceMapping'
+    Properties:
+      BatchSize: 1
+      EventSourceArn: !GetAtt UploadQueue.Arn
+      FunctionName: !GetAtt S3EventProcessor.Arn
+      Enabled: true
+  
+  # Event Source Mapping for PriceAdjuster
+  PriceAdjusterEventSourceMapping:
+    Type: 'AWS::Lambda::EventSourceMapping'
+    Properties:
+      BatchSize: 16
+      EventSourceArn: !GetAtt PricingModelStream.Arn
+      FunctionName: !GetAtt PriceAdjuster.Arn
+      StartingPosition: LATEST
+      Enabled: true

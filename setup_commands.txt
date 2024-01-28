@@ -9,12 +9,10 @@ poetry run python seed_s3.py
 
 # create lambda
 
-Compress-Archive -LiteralPath .\batch_transform\lambda_function.py -DestinationPath .\batch_transform\batch_transform.zip -Force  # windows
-zip batch_transform/batch_transform.py batch_transform/batch_transform.zip  # unix
---runtime python3.10 --role arn:aws:iam::123456789012:role/lambda-role
-
 # update
-awslocal lambda update-function-code --function-name BatchTransform --zip-file fileb://batch_transform/batch_transform.zip
+awslocal lambda update-function-code --function-name x --zip-file fileb://batch/batch_transform/batch_transform.zip
+awslocal lambda update-function-code --function-name x --zip-file fileb://real_time/s3_event_processor/s3_event_processor.zip
+awslocal lambda update-function-code --function-name x --zip-file fileb://real_time/price_adjuster/price_adjuster.zip
 
 # invoke lambda (debug)
 nvm
@@ -23,5 +21,7 @@ nvm
 username airflow
 password airflow
 
-connections -> "+" -> AWS / localhost / 4566
-
+# updating lambdas
+python package_lambda.py batch/batch_transform/lambda_function.py batch/batch_transform/requirements.txt batch/batch_transform/batch_transform.zip
+python package_lambda.py real_time/s3_event_processor/lambda_function.py real_time/s3_event_processor/requirements.txt real_time/s3_event_processor/s3_event_processor.zip
+python package_lambda.py real_time/price_adjuster/lambda_function.py real_time/price_adjuster/requirements.txt real_time/price_adjuster/price_adjuster.zip

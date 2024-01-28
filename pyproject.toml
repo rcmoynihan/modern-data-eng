@@ -16,6 +16,9 @@ apache-airflow = {extras = ["amazon"], version = "^2.7.0"}
 great-expectations = "==0.18.6"
 airflow-provider-great-expectations = "^0.2.7"
 airflow-clickhouse-plugin = "^1.1.0"
+redis = "^5.0.1"
+pydantic = "^2.5.3"
+rich = "^13.7.0"
 
 
 [build-system]

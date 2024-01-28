@@ -4,15 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 import shutil
-
-def generate_requirements(requirements_file_path: Path) -> None:
-    """
-    Generates a requirements.txt file from the active Poetry environment.
-
-    Args:
-    requirements_file_path (Path): Path to the requirements.txt file to be generated.
-    """
-    subprocess.check_call(['poetry', 'export', '-f', 'requirements.txt', '--output', str(requirements_file_path)])
+from platform import python_version_tuple
 
 def create_zip_file_with_lambda_files_and_packages(lambda_zip: Path, lambda_file_path: Path, temp_directory: Path) -> None:
     """
@@ -35,16 +27,36 @@ def create_zip_file_with_lambda_files_and_packages(lambda_zip: Path, lambda_file
 
 def install_packages(requirements_file_path: Path, temp_directory: Path) -> None:
     """
-    Install packages from the requirements file to the temporary directory.
+    Install packages from the requirements file to the temporary directory
+    with compatibility for AWS Lambda's x86_64 and arm64 architectures.
 
     Args:
-    requirements_file_path (Path): Path to the requirements.txt file.
-    temp_directory (Path): Path to the temporary directory.
+        requirements_file_path (Path): Path to the requirements.txt file.
+        temp_directory (Path): Path to the temporary directory.
     """
+
+    # Determine the appropriate platform based on the system architecture
+    platform = "manylinux2014_x86_64" if sys.platform == "win32" else "manylinux2014_aarch64"
+
+    # Extract major and minor version of Python
+    python_version = ".".join(python_version_tuple()[:2])
+
+    # Construct the pip install command
+    pip_command = [
+        'pip', 'install',
+        '--platform', platform,
+        '--target', str(temp_directory),
+        '--implementation', 'cp',
+        '--python-version', python_version,
+        '--only-binary=:all:', '--upgrade',
+        '-r', str(requirements_file_path)
+    ]
+
+    # Execute the pip install command
     if sys.platform == "win32":
-        subprocess.check_call(['pip', 'install', '-r', str(requirements_file_path), '-t', str(temp_directory)], shell=True)
+        subprocess.check_call(pip_command, shell=True)
     else:
-        subprocess.check_call(['pip', 'install', '-r', str(requirements_file_path), '-t', str(temp_directory)])
+        subprocess.check_call(pip_command)
 
 def create_lambda_zip(input_path: Path, requirements_path: Path, output_path: Path) -> None:
     """

@@ -13,7 +13,6 @@ x-airflow-common:
     - AIRFLOW__SMTP__SMTP_HOST=maildev  # Name of your Maildev service in Docker Compose
     - AIRFLOW__SMTP__SMTP_PORT=25  # Default Maildev port
     - AIRFLOW__SMTP__SMTP_MAIL_FROM=airflow_notification@rainforest.com
-    - _AIRFLOW_DB_MIGRATE=True
     - _AIRFLOW_WWW_USER_CREATE=True
     - _AIRFLOW_WWW_USER_USERNAME=${_AIRFLOW_WWW_USER_USERNAME:-airflow}
     - _AIRFLOW_WWW_USER_PASSWORD=${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
@@ -117,7 +116,7 @@ services:
             --conn-host 'clickhouse' \
             --conn-login 'default' \
             --conn-port 8123
-    restart: on-failure
+    restart: on-failure:3
 
 
   airflow-webserver:
@@ -176,6 +175,19 @@ services:
     networks:
       - data-eng-net
 
+  redis:
+    image: docker.io/bitnami/redis:7.2
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    ports:
+      - '6379:6379'
+    volumes:
+      - 'redis_data:/bitnami/redis/data'
+    networks:
+      - data-eng-net
+
 networks:
   data-eng-net:
     driver: bridge
@@ -184,3 +196,5 @@ volumes:
   postgres-db-volume:
   zookeeper_data_1:
   clickhouse_data:
+  redis_data:
+    driver: local
