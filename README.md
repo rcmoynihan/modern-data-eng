@@ -150,7 +150,7 @@ Installed manually:
 Installed via docker-compose:
 - **Apache Airflow:** An open-source platform used for orchestrating complex computational workflows and data processing pipelines. In your setup, Airflow is customized with specific configurations for the executor, database connections, SMTP for email notifications, and user setup.
 - **PostgreSQL:** A powerful, open-source object-relational database system that uses and extends the SQL language. It's being used here as the database for Apache Airflow.
-- **ClickHouse:** An open-source column-oriented database management system capable of real-time generation of analytical data reports.
+- **ClickHouse:** An open-source column-oriented database management system capable.
 - **Great Expectations (GX):** Data quality validation tool.
 - **MailDev:** An easy-to-use SMTP server for development purposes. It's used here to test email notifications from Airflow.
 - **ZooKeeper:** A centralized service for maintaining configuration information, naming, providing distributed synchronization, and providing group services.
