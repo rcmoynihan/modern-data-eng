@@ -125,6 +125,7 @@ To ensure that your setup is correct, perform the following verifications _after
 6. **DBeaver:** Open DBeaver and ensure ClickHouse drivers are visible in the Driver Manager.
 
 ## Troubleshooting
+_Below are a few common points, but even if something is not listed I encourage you to try and troubleshoot amongst you and your cohort. The reality is setting up a development environment can often be the hardest part of software engineering - start practing now!_
 ### General Issues
 - **An installed CLI tool cannot be found:** Try exiting your terminal completely and reopening a new window to reload. Then, ensure your poetry environment is installed and running properly.
 
