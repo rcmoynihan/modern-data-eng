@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 import json
-import great_expectations as gx
 from airflow import DAG
 from airflow.providers.amazon.aws.operators.lambda_function import (
     LambdaInvokeFunctionOperator,
@@ -13,7 +12,6 @@ from airflow.models import Variable
 
 from util.s3 import find_latest_partition
 from util.notify import generate_failure_email_operator
-from util.validate import gx_validate
 from util.sql import create_table_if_not_exists_query, insert_data_query
 
 
@@ -74,27 +72,6 @@ aggregate_data = LambdaInvokeFunctionOperator(
     dag=dag,
 )
 
-validate_data = BranchPythonOperator(  # TODO: make this an excersie for the students to implement (leave actual code in util/validate.py, but remove depedencies below). can use separate branch.
-    task_id="validate_data",
-    python_callable=gx_validate,
-    op_kwargs={
-        "data_context": gx.get_context(context_root_dir="dags/include/gx/"),
-        "checkpoint_name": "aggregate_data_checkpoint",
-        "s3_key": aggregated_key,
-    },
-    dag=dag,
-)
-
-notify_validation_did_not_pass = (
-    EmailOperator(  # TODO: also remove this and make it an exercise for the students
-        task_id="notify_validation_did_not_pass",
-        to="data_eng_team@rainforest.com",
-        subject=f"Airflow alert: Validation suite FAILED for {date_fmt}",
-        html_content=f"<h3>Validation suite FAILED for {date_fmt}</h3>",
-        dag=dag,
-    )
-)
-
 # Operator to copy data from one S3 bucket to another after validation, preparing it for ClickHouse.
 copy_to_clickhouse_s3 = S3CopyObjectOperator(
     task_id="copy_to_clickhouse_s3",
@@ -120,7 +97,6 @@ load_clickhouse = ClickHouseOperator(
 
 # Set up email operators for task failures
 aggregate_data_failure_email = generate_failure_email_operator("aggregate_data", dag)
-validate_data_failure_email = generate_failure_email_operator("validate_data", dag)
 copy_to_clickhouse_s3_failure_email = generate_failure_email_operator(
     "copy_to_clickhouse_s3", dag
 )
@@ -129,11 +105,9 @@ load_clickhouse_failure_email = generate_failure_email_operator("load_clickhouse
 
 # Define the workflow dependencies: Get partition, then aggregate data, validate, copy to final S3 bucket, and load into ClickHouse.
 get_partition >> [aggregate_data, notify_end_run_no_data]
-validate_data >> [copy_to_clickhouse_s3, notify_validation_did_not_pass]
-aggregate_data >> validate_data >> copy_to_clickhouse_s3 >> load_clickhouse
+aggregate_data >> copy_to_clickhouse_s3 >> load_clickhouse
 
 # Set dependencies for email alerts on failure
 aggregate_data >> aggregate_data_failure_email
-validate_data >> validate_data_failure_email
 copy_to_clickhouse_s3 >> copy_to_clickhouse_s3_failure_email
 load_clickhouse >> load_clickhouse_failure_email
