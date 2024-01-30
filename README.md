@@ -21,30 +21,35 @@ This section outlines the steps required to set up your environment before atten
   ```
 - **Windows:** Download and install Git from [Git for Windows](https://gitforwindows.org/). Follow the installation wizard steps.
 
-### 2. Pyenv and Python 3.10.10
+### 2a. Python and Poetry (vanilla)
+_If you have Anaconda installed please follow 2b below instead._
 - **Mac:**
   ```
   brew install pyenv
   pyenv install 3.10.10
+  curl -sSL https://install.python-poetry.org | python3 -
   ```
 - **Windows:** Use [pyenv-win](https://github.com/pyenv-win/pyenv-win) via PowerShell:
   ```
   pyenv install 3.10.10
-  ```
-
-### 3. Poetry
-- **Mac and Windows:** Install Poetry using the same command for both platforms:
-  ```
   curl -sSL https://install.python-poetry.org | python3 -
   ```
 
-### 4. Docker Desktop
+### 2b. Python and Poetry (conda)
+- **Mac and Windows:**
+  ```
+  conda create -n data-eng-env python=3.10.10
+  conda activate data-eng-env
+  pip install poetry
+  ```
+
+### 3. Docker Desktop
 - **Mac and Windows:** Download Docker Desktop from the [Docker website](https://www.docker.com/products/docker-desktop) and follow the installation instructions.
 
-### 5. LocalStack Desktop Client
+### 4. LocalStack Desktop Client
 - **Mac and Windows:** Create a LocalStack account (recommended to use Github as an auth provider) after following [this link](https://app.localstack.cloud/sign-up). Then under [LocalStack Desktop](https://app.localstack.cloud/download) download the client that suits your OS.
 
-### 6. DBeaver and ClickHouse Drivers
+### 5. DBeaver and ClickHouse Drivers
 - **Mac and Windows:** Download DBeaver from the [DBeaver website](https://dbeaver.io/download/). Install ClickHouse drivers via DBeaver's GUI:
   - Open DBeaver.
   - Navigate to Database > Driver Manager.
@@ -81,6 +86,7 @@ This section outlines the steps required to set up your environment before atten
   ```
   cd modern-data-eng
   ```
+- Launch the Docker Desktop application (can be hidden/minimized but needs to be running for Docker to work correctly)
 - Run the command:
   ```
   docker-compose up --build
