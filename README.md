@@ -243,3 +243,13 @@ Ensure you are `cd`'d into the project root directory (`modern-data-eng/`) befor
   ```bash
   python seed_s3.py --num-records 1
   ```
+
+**Create new Lambda function:**
+  ```bash
+  aws lambda create-function \
+    --function-name [new_function_name] \
+    --runtime python3.10 \
+    --role arn:aws:iam::000000000000:role/lambda-role \
+    --handler lambda_function.lambda_handler \
+    --zip-file fileb://[file_path]
+  ```
