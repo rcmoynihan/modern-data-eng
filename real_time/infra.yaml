@@ -90,7 +90,6 @@ Resources:
                   - 'kinesis:Get*'
                   - 'kinesis:Put*'
                 Resource: !Sub 'arn:aws:kinesis:${AWS::Region}:${AWS::AccountId}:stream/PricingModelStream'
-
   
   BatchTransform:
     Type: 'AWS::Lambda::Function'
