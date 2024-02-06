@@ -207,6 +207,18 @@ Ensure you are `cd`'d into the project root directory (`modern-data-eng/`) befor
   ```bash
   awslocal lambda update-function-code --function-name [function_name] --zip-file fileb://batch/batch_transform/batch_transform.zip
   ```
+**Hints for exercise:**
+  ```python
+  import great_expectations as gx
+  from util.validate import gx_validate
+  ```
+  ```python
+  op_kwargs={
+      "data_context": gx.get_context(context_root_dir="dags/include/gx/"),
+      "checkpoint_name": "aggregate_data_checkpoint",
+      "s3_key": aggregated_key,
+  },
+  ```
 
 ### Real Time
 **Update Cloudformation stack:**
