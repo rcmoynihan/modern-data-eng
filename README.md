@@ -69,6 +69,7 @@ _If you have Anaconda installed please follow 2b below instead._
   ```
   pyenv global 3.10.10
   ```
+  _If you installed with Conda, just activate that environment._
 
 ### 3. Setup Poetry Environment
 - Navigate to the cloned repository:
