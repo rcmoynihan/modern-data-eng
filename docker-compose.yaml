@@ -115,7 +115,7 @@ services:
             --conn-type 'sqlite' \
             --conn-host 'clickhouse' \
             --conn-login 'default' \
-            --conn-port 8123
+            --conn-port 9000
     restart: on-failure:3
 
 
