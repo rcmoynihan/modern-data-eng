@@ -17,7 +17,7 @@ x-airflow-common:
     - _AIRFLOW_WWW_USER_USERNAME=${_AIRFLOW_WWW_USER_USERNAME:-airflow}
     - _AIRFLOW_WWW_USER_PASSWORD=${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
   volumes:
-    - ./dags:/opt/airflow/batch/dags
+    - ./batch/dags:/opt/airflow/dags
     - ./airflow-data/logs:/opt/airflow/logs
     - ./airflow-data/plugins:/opt/airflow/plugins
     - ./airflow-data/airflow.cfg:/opt/airlfow/airflow.cfg
