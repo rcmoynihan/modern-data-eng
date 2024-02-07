@@ -204,9 +204,14 @@ Ensure you are `cd`'d into the project root directory (`modern-data-eng/`) befor
   python package_lambda.py batch/batch_transform/lambda_function.py batch/batch_transform/requirements.txt batch/batch_transform/batch_transform.zip
   ```
 
-**Update Lambda function code:**
+**Create Lambda function:**
   ```bash
-  awslocal lambda update-function-code --function-name [function_name] --zip-file fileb://batch/batch_transform/batch_transform.zip
+  awslocal lambda create-function \
+  --function-name BatchTransform \
+  --runtime python3.10 \
+  --role arn:aws:iam::000000000000:role/lambda-role \
+  --handler testlambda.handler \
+  --zip-file fileb://batch/batch_transform/batch_transform.zip
   ```
 **Hints for exercise:**
   ```python
