@@ -210,7 +210,7 @@ Ensure you are `cd`'d into the project root directory (`modern-data-eng/`) befor
   --function-name BatchTransform \
   --runtime python3.10 \
   --role arn:aws:iam::000000000000:role/lambda-role \
-  --handler testlambda.handler \
+  --handler lambda_function.lambda_handler \
   --zip-file fileb://batch/batch_transform/batch_transform.zip
   ```
 **Hints for exercise:**
