@@ -69,6 +69,7 @@ _If you have Anaconda installed please follow 2b below instead._
   ```
   pyenv global 3.10.10
   ```
+  _If you installed with Conda, just activate that environment._
 
 ### 3. Setup Poetry Environment
 - Navigate to the cloned repository:
@@ -125,7 +126,7 @@ To ensure that your setup is correct, perform the following verifications _after
 6. **DBeaver:** Open DBeaver and ensure ClickHouse drivers are visible in the Driver Manager.
 
 ## Troubleshooting
-_Below are a few common points, but even if something is not listed I encourage you to try and troubleshoot amongst you and your cohort. The reality is setting up a development environment can often be the hardest part of software engineering - start practing now!_
+_Below are a few common points, but even if something is not listed I encourage you to try and troubleshoot amongst you and your cohort. The reality is setting up a development environment can often be the hardest part of software engineering - start practicing now!_
 ### General Issues
 - **An installed CLI tool cannot be found:** Try exiting your terminal completely and reopening a new window to reload. Then, ensure your poetry environment is installed and running properly.
 
@@ -203,9 +204,27 @@ Ensure you are `cd`'d into the project root directory (`modern-data-eng/`) befor
   python package_lambda.py batch/batch_transform/lambda_function.py batch/batch_transform/requirements.txt batch/batch_transform/batch_transform.zip
   ```
 
-**Update Lambda function code:**
+**Create Lambda function:**
   ```bash
-  awslocal lambda update-function-code --function-name [function_name] --zip-file fileb://batch/batch_transform/batch_transform.zip
+  awslocal lambda create-function \
+  --function-name BatchTransform \
+  --runtime python3.10 \
+  --role arn:aws:iam::000000000000:role/lambda-role \
+  --handler lambda_function.lambda_handler \
+  --timeout 60 \
+  --zip-file fileb://batch/batch_transform/batch_transform.zip
+  ```
+**Hints for exercise:**
+  ```python
+  import great_expectations as gx
+  from util.validate import gx_validate
+  ```
+  ```python
+  op_kwargs={
+      "data_context": gx.get_context(context_root_dir="dags/include/gx/"),
+      "checkpoint_name": "aggregate_data_checkpoint",
+      "s3_key": aggregated_key,
+  },
   ```
 
 ### Real Time
