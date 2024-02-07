@@ -1,3 +1,4 @@
+import os
 import tempfile
 from great_expectations.data_context import DataContext
 import boto3
@@ -26,17 +27,26 @@ def gx_validate(data_context: DataContext, checkpoint_name: str, s3_key: str) ->
             - If the validation is successful, returns "load_clickhouse".
             - If the validation fails, returns "notify_validation_did_not_pass".
     """
-    tmp_dir = "/opt/airflow/dags/include/data/"
+    directory = "/opt/airflow/dags/include/data/"
 
-    with tempfile.NamedTemporaryFile(dir=tmp_dir, suffix=".csv", delete=True) as tmp_file:
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    with tempfile.NamedTemporaryFile(
+        dir=directory, suffix=".csv", delete=True
+    ) as tmp_file:
         fetch_csv_from_s3(s3_key, tmp_file.name)
 
         # Create a batch request for the temporary file
-        data_asset = data_context.get_datasource("aggregated_data").get_asset("aggregated_data_asset")
+        data_asset = data_context.get_datasource("aggregated_data").get_asset(
+            "aggregated_data_asset"
+        )
         batch_request = data_asset.build_batch_request()
 
         # Run the checkpoint using the data context
-        result = data_context.run_checkpoint(checkpoint_name, batch_request=batch_request)
+        result = data_context.run_checkpoint(
+            checkpoint_name, batch_request=batch_request
+        )
 
     if result["success"]:
         return "copy_to_clickhouse_s3"
@@ -56,5 +66,5 @@ def fetch_csv_from_s3(key: str, local_path: str) -> None:
         obj = s3.get_object(Bucket="staging", Key=key)
 
         # Read the content of the object
-        with open(local_path, 'wb') as file:
-            file.write(obj['Body'].read())
+        with open(local_path, "wb") as file:
+            file.write(obj["Body"].read())
